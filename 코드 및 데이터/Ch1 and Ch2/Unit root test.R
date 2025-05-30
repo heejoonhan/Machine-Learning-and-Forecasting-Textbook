@@ -12,6 +12,7 @@ library(urca)
 
 data <- read_excel("DefaultPremium_data.xls")
 daily = matrix(data$Daily)
+daily = na.omit(daily)
 plot(daily, type = 'l')  
 
 ## AR 계수 추정
