@@ -14,7 +14,8 @@ from sklearn.base import BaseEstimator, RegressorMixin
 warnings.filterwarnings("ignore", category=UserWarning)
 
 scaler = MinMaxScaler()
-scaler_std = StandardScaler()
+scaler_demean = StandardScaler(with_mean=True, with_std=False)
+scaler_std = StandardScaler(with_mean=True, with_std=True)
 
 def embed(x, dimension=1):
     n, d = x.shape
@@ -126,7 +127,7 @@ class AdaptiveShrinkage(BaseEstimator, RegressorMixin):
 def run_adaptshrink(Y, horizon, criterion, alpha=1.0):
     Y2 = Y.copy()
     pca = PCA(n_components=4)
-    standard_Y2 = scaler_std.fit_transform(Y2)
+    standard_Y2 = scaler_demean.fit_transform(Y2)
     scores = pca.fit_transform(standard_Y2)
     Y2 = pd.concat([Y2, pd.DataFrame(scores, index=Y2.index)], axis=1)
     Y2.columns = Y2.columns.astype(str)
@@ -179,11 +180,11 @@ def adaptshrinkage_cv_rolling_window(Y, npred, horizon, criterion="cv", alpha=1.
     rmse = np.sqrt(mean_squared_error(real[-len(save_pred):], save_pred))
     mae = mean_absolute_error(real[-len(save_pred):], save_pred)
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(real, label="Actual", alpha=0.7)
-    plt.plot(pred_series, label="Forecast", color="red", linewidth=1.5)
+    plt.plot(real, label="Actual")
+    padding = [np.nan] * (len(real) - len(pred_series))
+    plt.plot(padding + list(pred_series), label="Forecast", color="red")
     plt.legend()
-    plt.title(f"Rolling Window Forecast (RMSE: {rmse:.4f})")
+    plt.title("Rolling Window Forecast")
     plt.show()
 
     return {
